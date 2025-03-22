@@ -1,3 +1,4 @@
+using API.Middleware;
 using Core.Interfaces;
 using Ecommerce.API.Extensions;
 using Infrastructue.Data;
@@ -15,6 +16,7 @@ builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 var app = builder.Build();
+app.UseMiddleware<ExceptionMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -28,6 +30,8 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseCors("CorsPolicy");
 
 using var scope = app.Services.CreateScope();
 var services = scope.ServiceProvider;
