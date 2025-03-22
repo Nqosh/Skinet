@@ -1,4 +1,7 @@
+using Core.Interfaces;
 using Infrastructue.Data;
+using Infrastructure.Data;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +17,9 @@ builder.Services.AddDbContext<StoreContext>(opt =>
         opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
     });
 
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped(typeof(IGenericRepository<>),typeof(GenericRepository<>));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -28,5 +34,24 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+using var scope = app.Services.CreateScope();
+var services = scope.ServiceProvider;
+var logger = services.GetRequiredService<ILogger<Program>>();
+var context = services.GetRequiredService<StoreContext>();
+
+try
+{
+    await context.Database.MigrateAsync();
+    /* await identityContext.Database.MigrateAsync()*/
+   
+    //await StoreContextSeed.SeedAsync(context);
+    //await AppIdentityDbContextSeed.SeedUsersAsync(userManager);
+}
+catch (Exception ex)
+{
+    logger.LogError(ex, "An error occured during migration");
+}
+
 
 app.Run();
